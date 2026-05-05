@@ -7,18 +7,29 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function Simulator() {
   const [semaphoreValue, setSemaphoreValue] = useState(1);
+  const [readyProcesses, setReadyProcesses] = useState<number[]>([]);
   const [activeProcesses, setActiveProcesses] = useState<number[]>([]);
   const [blockedProcesses, setBlockedProcesses] = useState<number[]>([]);
   const [completedProcesses, setCompletedProcesses] = useState<number[]>([]);
   const [processCounter, setProcessCounter] = useState(1);
+  const [isAnimatingSignal, setIsAnimatingSignal] = useState(false);
 
-  const handleWait = () => {
+  const handleSpawn = () => {
     const pid = processCounter;
     setProcessCounter((p) => p + 1);
+    setReadyProcesses((prev) => [...prev, pid]);
+  };
+
+  const handleWait = () => {
+    if (readyProcesses.length === 0) return;
+
+    const [pid, ...remainingReady] = readyProcesses;
+    setReadyProcesses(remainingReady);
     
-    setSemaphoreValue((prev) => prev - 1);
+    const newSemaphoreValue = semaphoreValue - 1;
+    setSemaphoreValue(newSemaphoreValue);
     
-    if (semaphoreValue - 1 < 0) {
+    if (newSemaphoreValue < 0) {
       setBlockedProcesses((prev) => [...prev, pid]);
     } else {
       setActiveProcesses((prev) => [...prev, pid]);
@@ -26,6 +37,9 @@ export default function Simulator() {
   };
 
   const handleSignal = () => {
+    // Start animation
+    setIsAnimatingSignal(true);
+    
     // A process is leaving the critical section
     if (activeProcesses.length > 0) {
       const [leavingPid, ...remainingActive] = activeProcesses;
@@ -33,22 +47,31 @@ export default function Simulator() {
       setCompletedProcesses((prev) => [...prev, leavingPid]);
     }
 
-    setSemaphoreValue((prev) => prev + 1);
+    const newSemaphoreValue = semaphoreValue + 1;
+    setSemaphoreValue(newSemaphoreValue);
 
-    // If there's a blocked process, wake it up
+    // If there's a blocked process, wake it up (delayed to match animation if we want, but logic happens now)
     if (blockedProcesses.length > 0) {
       const [wokenPid, ...remainingBlocked] = blockedProcesses;
-      setBlockedProcesses(remainingBlocked);
-      setActiveProcesses((prev) => [...prev, wokenPid]);
+      // We'll use a timeout or animation completion callback to actually move the process
+      setTimeout(() => {
+        setBlockedProcesses(remainingBlocked);
+        setActiveProcesses((prev) => [...prev, wokenPid]);
+        setIsAnimatingSignal(false);
+      }, 600); // Match animation duration
+    } else {
+      setTimeout(() => setIsAnimatingSignal(false), 600);
     }
   };
 
   const handleReset = () => {
     setSemaphoreValue(1);
+    setReadyProcesses([]);
     setActiveProcesses([]);
     setBlockedProcesses([]);
     setCompletedProcesses([]);
     setProcessCounter(1);
+    setIsAnimatingSignal(false);
   };
 
   return (
@@ -89,23 +112,34 @@ export default function Simulator() {
 
           <div className="flex flex-col gap-4">
             <button 
-              onClick={handleWait}
-              className="w-full py-4 px-6 bg-error hover:bg-red-600 text-white text-xl font-bold rounded-2xl button-3d button-3d-error flex justify-center items-center gap-2"
+              onClick={handleSpawn}
+              className="w-full py-4 px-6 bg-emerald-500 hover:bg-emerald-600 text-white text-xl font-bold rounded-2xl button-3d button-3d-success flex justify-center items-center gap-2"
             >
-              <Play className="w-6 h-6" /> TRIGGER Wait()
+              <Play className="w-6 h-6 rotate-90" /> SPAWN Process
             </button>
-            <p className="text-sm text-foreground/60 text-center px-4">
-              Decrements S. Spawns a process. If S &lt; 0, it blocks.
+            <p className="text-xs text-foreground/50 text-center px-4 -mt-2">
+              Creates a new process P{processCounter} in the Ready Queue
+            </p>
+
+            <button 
+              onClick={handleWait}
+              disabled={readyProcesses.length === 0}
+              className={`w-full py-4 px-6 bg-error hover:bg-red-600 text-white text-xl font-bold rounded-2xl button-3d button-3d-error flex justify-center items-center gap-2 mt-2 ${readyProcesses.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Activity className="w-6 h-6" /> TRIGGER Wait(S)
+            </button>
+            <p className="text-xs text-foreground/50 text-center px-4 -mt-2">
+              Decrement S. If S &lt; 0 → block the calling process
             </p>
 
             <button 
               onClick={handleSignal}
-              className="w-full py-4 px-6 bg-primary hover:bg-primary-hover text-white text-xl font-bold rounded-2xl button-3d button-3d-primary flex justify-center items-center gap-2 mt-4"
+              className="w-full py-4 px-6 bg-primary hover:bg-primary-hover text-white text-xl font-bold rounded-2xl button-3d button-3d-primary flex justify-center items-center gap-2 mt-2"
             >
-              <LogOut className="w-6 h-6" /> TRIGGER Signal()
+              <LogOut className="w-6 h-6" /> TRIGGER Signal(S)
             </button>
-            <p className="text-sm text-foreground/60 text-center px-4">
-              Increments S. Active process completes. If S &lt;= 0, unblocks a process.
+            <p className="text-xs text-foreground/50 text-center px-4 -mt-2">
+              Increment S. If S ≤ 0 → unblock a waiting process
             </p>
           </div>
         </div>
@@ -113,7 +147,32 @@ export default function Simulator() {
         {/* Queues */}
         <div className="col-span-1 lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          <div className="bg-card-bg border-2 border-border-color rounded-3xl p-6 flex flex-col h-80 overflow-y-auto">
+          <div className="bg-card-bg border-2 border-border-color rounded-3xl p-6 flex flex-col h-64 overflow-y-auto relative">
+            <h3 className="font-bold text-emerald-500 mb-4 border-b-2 border-border-color pb-2">
+              Ready Queue
+            </h3>
+            <div className="flex-1 flex flex-wrap content-start gap-3">
+              <AnimatePresence>
+                {readyProcesses.map(pid => (
+                  <motion.div
+                    key={pid}
+                    layout
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0, x: 20 }}
+                    className="w-12 h-12 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md"
+                  >
+                    P{pid}
+                  </motion.div>
+                ))}
+                {readyProcesses.length === 0 && (
+                  <p className="text-foreground/40 w-full text-center mt-8 italic text-sm">Empty</p>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          <div className="bg-card-bg border-2 border-border-color rounded-3xl p-6 flex flex-col h-64 overflow-y-auto">
             <h3 className="font-bold text-primary mb-4 border-b-2 border-border-color pb-2">
               Active / Critical Section
             </h3>
@@ -126,38 +185,63 @@ export default function Simulator() {
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0, opacity: 0 }}
-                    className="w-16 h-16 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-md"
+                    className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md"
                   >
                     P{pid}
                   </motion.div>
                 ))}
                 {activeProcesses.length === 0 && (
-                  <p className="text-foreground/40 w-full text-center mt-8 italic">Empty</p>
+                  <p className="text-foreground/40 w-full text-center mt-8 italic text-sm">Empty</p>
                 )}
               </AnimatePresence>
             </div>
           </div>
 
-          <div className="bg-card-bg border-2 border-border-color rounded-3xl p-6 flex flex-col h-80 overflow-y-auto">
+          <div className="bg-card-bg border-2 border-border-color rounded-3xl p-6 flex flex-col h-64 overflow-y-auto relative">
             <h3 className="font-bold text-error mb-4 border-b-2 border-border-color pb-2">
               Blocked Queue
             </h3>
             <div className="flex-1 flex flex-wrap content-start gap-3">
               <AnimatePresence>
-                {blockedProcesses.map(pid => (
+                {blockedProcesses.map((pid, idx) => (
                   <motion.div
                     key={pid}
                     layout
                     initial={{ scale: 0, opacity: 0, x: 50 }}
-                    animate={{ scale: 1, opacity: 1, x: 0 }}
+                    animate={{ 
+                      scale: 1, 
+                      opacity: 1, 
+                      x: 0,
+                      backgroundColor: idx === 0 && isAnimatingSignal ? "#ffffff" : "var(--error)"
+                    }}
+                    transition={{ duration: 0.3 }}
                     exit={{ scale: 0, opacity: 0, x: -50 }}
-                    className="w-16 h-16 bg-error text-white rounded-xl flex items-center justify-center font-bold text-xl shadow-md opacity-80"
+                    className={`w-12 h-12 bg-error text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md opacity-80 ${idx === 0 && isAnimatingSignal ? 'animate-smash' : ''}`}
                   >
                     P{pid}
                   </motion.div>
                 ))}
                 {blockedProcesses.length === 0 && (
-                  <p className="text-foreground/40 w-full text-center mt-8 italic">Empty</p>
+                  <p className="text-foreground/40 w-full text-center mt-8 italic text-sm">Empty</p>
+                )}
+              </AnimatePresence>
+
+              {/* Signal Pulse Animation Overlay */}
+              <AnimatePresence>
+                {isAnimatingSignal && blockedProcesses.length > 0 && (
+                  <motion.div
+                    initial={{ x: -100, opacity: 0, scale: 0.5 }}
+                    animate={{ 
+                      x: 0, 
+                      opacity: [0, 1, 1, 0],
+                      scale: [0.5, 1.2, 1.5, 2],
+                      rotate: [0, 90, 180, 270]
+                    }}
+                    transition={{ duration: 0.6, ease: "easeIn" }}
+                    className="absolute top-1/2 left-0 w-12 h-12 bg-primary rounded-full z-10 flex items-center justify-center shadow-xl border-4 border-white"
+                  >
+                    <Activity className="text-white w-6 h-6" />
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>

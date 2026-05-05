@@ -111,3 +111,21 @@ body {
 .button-3d-error:active {
   box-shadow: 0 0 0 #ea2b2b;
 }
+
+.button-3d-success {
+  box-shadow: 0 4px 0 #059669;
+}
+
+.button-3d-success:active {
+  box-shadow: 0 0 0 #059669;
+}
+
+@keyframes smash {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); filter: brightness(2); }
+  100% { transform: scale(1); }
+}
+
+.animate-smash {
+  animation: smash 0.4s ease-out;
+}
