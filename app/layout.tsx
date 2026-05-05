@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OS2 Semaphore Game",
-  description: "Learn Semaphores and Mutex interactively",
+  title: "OS2 Semaphore Hub | Master Process Synchronization",
+  description: "Interactive learning hub for Operating Systems 2. Master Wait, Signal, Mutex, and classic synchronization problems with simulators, quizzes, and exam exercises.",
 };
 
 export default function RootLayout({

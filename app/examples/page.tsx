@@ -52,7 +52,7 @@ const examExercises = [
   {
     id: "sujet-a-g4",
     date: "27/11/2024 (13h30)",
-    variant: "Sujet A – G4",
+    variant: "Subject A – G4",
     icon: <GraduationCap className="w-12 h-12 text-rose-500" />,
     iconBg: "bg-rose-100 dark:bg-rose-900/30",
     courseQuestion: "How does a mutual exclusion semaphore guarantee that only one process accesses a critical section at a time?",
@@ -84,7 +84,7 @@ const examExercises = [
   {
     id: "sujet-b-g2",
     date: "27/11/2024 (9h30)",
-    variant: "Sujet B – G2",
+    variant: "Subject B – G2",
     icon: <GraduationCap className="w-12 h-12 text-indigo-500" />,
     iconBg: "bg-indigo-100 dark:bg-indigo-900/30",
     courseQuestion: "Why are semaphore-based solutions often preferred over busy-waiting (active waiting) solutions in operating systems?",
@@ -119,7 +119,7 @@ const examExercises = [
   {
     id: "sujet-b-g1",
     date: "28/11/2024 (9h30)",
-    variant: "Sujet B – G1",
+    variant: "Subject B – G1",
     icon: <GraduationCap className="w-12 h-12 text-cyan-500" />,
     iconBg: "bg-cyan-100 dark:bg-cyan-900/30",
     courseQuestion: "1. Difference between a mutual exclusion semaphore and a general semaphore?\n2. What happens if a process executes wait on a semaphore whose value is 0?",
@@ -136,7 +136,13 @@ const examExercises = [
         </div>
         <div>
           <p className="font-bold text-primary mb-1">Ex2: Answers 2 and 5 are correct</p>
-          <p className="text-sm">b=1 so P2 runs first (A2). Then signals a → P1 or P3 can go. A2→A3→A2→A1 and A2→A1→A2→A1 are both valid.</p>
+          <div className="bg-background p-3 rounded-lg font-mono text-xs mb-2">
+            <p>semaphore a=0, b=1;</p>
+            <p>P1: wait(a); A1; signal(b);</p>
+            <p>P2: wait(b); A2; signal(a);</p>
+            <p>P3: wait(a); A3; signal(b);</p>
+          </div>
+          <p className="text-sm">b=1 so P2 runs first (A2). Then signals a → P1 or P3 can go. Sequences like A2→A3→A2→A1 (Option 2) or A2→A1→A2→A1 (Option 5) are valid.</p>
         </div>
       </div>
     ),
@@ -145,7 +151,7 @@ const examExercises = [
   {
     id: "sujet-b-g3",
     date: "28/11/2024 (11h00)",
-    variant: "Sujet B – G3",
+    variant: "Subject B – G3",
     icon: <GraduationCap className="w-12 h-12 text-amber-500" />,
     iconBg: "bg-amber-100 dark:bg-amber-900/30",
     courseQuestion: "Suppose task A executes before task B.\n1. When must a task execute 'wait' to respect execution order?\n2. When must a task execute 'signal' to allow another task to begin?",
@@ -175,7 +181,7 @@ const examExercises = [
   {
     id: "sujet-a-g5",
     date: "28/11/2024 (8h00)",
-    variant: "Sujet A – G5",
+    variant: "Subject A – G5",
     icon: <GraduationCap className="w-12 h-12 text-emerald-500" />,
     iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
     courseQuestion: "Suppose task A executes before task B.\n1. When must a task execute 'wait'?\n2. When must a task execute 'signal'?",
@@ -282,8 +288,29 @@ export default function Examples() {
           </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-foreground mb-2">The Train Track</h2>
-            <p className="text-foreground/80">Two cities A and B are connected by a single rail track. Trains can go A→B or B→A, but never in opposite directions simultaneously.</p>
-            <SolutionCard title="Solution Model" text={<p>This is a classic <strong>Readers-Writers</strong> variation. Same-direction trains share the track; opposite directions require strict mutual exclusion.</p>} />
+            <p className="text-foreground/80">Two cities A and B are connected by a single rail track. Trains can go A→B or B→A, but never in opposite directions simultaneously. Trains in the same direction can share the track.</p>
+            <SolutionCard 
+              title="Readers-Writers Model" 
+              text={
+                <div className="space-y-2">
+                  <p>Modeled as two groups of "readers" where each group blocks the other. <code>track</code> is the main mutex.</p>
+                  <div className="bg-background p-3 rounded-lg font-mono text-xs space-y-1 overflow-x-auto">
+                    <p>semaphore track=1, mutexA=1, mutexB=1;</p>
+                    <p>int countA=0, countB=0;</p>
+                    <p className="mt-2 text-primary">// Train A → B</p>
+                    <p>wait(mutexA);</p>
+                    <p>countA++;</p>
+                    <p>if (countA == 1) wait(track); // First train locks track</p>
+                    <p>signal(mutexA);</p>
+                    <p className="text-gray-400 font-italic">// ... crossing track ...</p>
+                    <p>wait(mutexA);</p>
+                    <p>countA--;</p>
+                    <p>if (countA == 0) signal(track); // Last train frees track</p>
+                    <p>signal(mutexA);</p>
+                  </div>
+                </div>
+              } 
+            />
           </div>
         </div>
 
@@ -294,7 +321,37 @@ export default function Examples() {
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-foreground mb-2">The Sleeping Barber</h2>
             <p className="text-foreground/80">1 barber, 1 chair, N waiting chairs. No customers → barber sleeps. Customer arrives → wakes barber or waits. No chairs → customer leaves.</p>
-            <SolutionCard title="Solution Model" text={<p>Three semaphores: <code>customers</code> (waiting count), <code>barber</code> (0=asleep, 1=ready), and a <code>mutex</code> for the chair counter.</p>} />
+            <SolutionCard 
+              title="Standard Semaphore Solution" 
+              text={
+                <div className="space-y-2">
+                  <div className="bg-background p-3 rounded-lg font-mono text-xs space-y-1 overflow-x-auto">
+                    <p>semaphore customers=0, barber=0, mutex=1;</p>
+                    <p>int waiting=0; // count of waiting customers</p>
+                    <p className="mt-2 text-primary">// Barber Process</p>
+                    <p>while(1) {"{"}</p>
+                    <p className="pl-4">wait(customers); // sleep until customer arrives</p>
+                    <p className="pl-4">wait(mutex); // protect 'waiting' count</p>
+                    <p className="pl-4">waiting--; // decrement waiting count</p>
+                    <p className="pl-4">signal(barber); // barber is now ready</p>
+                    <p className="pl-4">signal(mutex);</p>
+                    <p className="pl-4">cut_hair();</p>
+                    <p>{"}"}</p>
+                    <p className="mt-2 text-secondary">// Customer Process</p>
+                    <p>wait(mutex);</p>
+                    <p>if (waiting &lt; N) {"{"}</p>
+                    <p className="pl-4">waiting++;</p>
+                    <p className="pl-4">signal(customers); // wake barber</p>
+                    <p className="pl-4">signal(mutex);</p>
+                    <p className="pl-4">wait(barber); // wait for barber to be ready</p>
+                    <p className="pl-4">get_haircut();</p>
+                    <p>{"}"} else {"{"}</p>
+                    <p className="pl-4">signal(mutex); // shop full, leave</p>
+                    <p>{"}"}</p>
+                  </div>
+                </div>
+              } 
+            />
           </div>
         </div>
 
@@ -304,8 +361,35 @@ export default function Examples() {
           </div>
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-foreground mb-2">Producer-Consumer</h2>
-            <p className="text-foreground/80">A producer creates items into a bounded buffer. A consumer takes items out. Buffer has limited size.</p>
-            <SolutionCard title="Solution Model" text={<p><code>mutex</code> for buffer access, <code>empty</code> semaphore (init = buffer size) for free space, <code>full</code> semaphore (init = 0) for available items.</p>} />
+            <p className="text-foreground/80">A producer creates items into a bounded buffer of size N. A consumer takes items out. Prevents overflow and underflow.</p>
+            <SolutionCard 
+              title="Bounded Buffer Solution" 
+              text={
+                <div className="space-y-2">
+                  <div className="bg-background p-3 rounded-lg font-mono text-xs space-y-1 overflow-x-auto">
+                    <p>semaphore empty=N, full=0, mutex=1;</p>
+                    <p className="mt-2 text-primary">// Producer</p>
+                    <p>while(1) {"{"}</p>
+                    <p className="pl-4">produce_item();</p>
+                    <p className="pl-4">wait(empty); // wait for free slot</p>
+                    <p className="pl-4">wait(mutex); // exclusive buffer access</p>
+                    <p className="pl-4">insert_item();</p>
+                    <p className="pl-4">signal(mutex);</p>
+                    <p className="pl-4">signal(full); // notify available item</p>
+                    <p>{"}"}</p>
+                    <p className="mt-2 text-secondary">// Consumer</p>
+                    <p>while(1) {"{"}</p>
+                    <p className="pl-4">wait(full); // wait for item</p>
+                    <p className="pl-4">wait(mutex);</p>
+                    <p className="pl-4">remove_item();</p>
+                    <p className="pl-4">signal(mutex);</p>
+                    <p className="pl-4">signal(empty); // notify free slot</p>
+                    <p className="pl-4">consume_item();</p>
+                    <p>{"}"}</p>
+                  </div>
+                </div>
+              } 
+            />
           </div>
         </div>
 

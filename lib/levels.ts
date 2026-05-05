@@ -140,7 +140,7 @@ export const levels: Level[] = [
   },
   {
     id: 11,
-    question: "(Test 1 – Sujet A) How does a mutual exclusion semaphore guarantee that only one process accesses a critical section at a time?",
+    question: "(Test 1 – Subject A) How does a mutual exclusion semaphore guarantee that only one process accesses a critical section at a time?",
     type: "multiple_choice",
     options: [
       "By constantly checking a boolean flag in a while loop",
@@ -153,7 +153,7 @@ export const levels: Level[] = [
   },
   {
     id: 12,
-    question: "(Test 1 – Sujet A) P1, P2, P3 share variables n and m with semaphores S1=1, S2=1. P1 does wait(S1);wait(S2);...signal(S2);signal(S1). Why is this flawed?",
+    question: "(Test 1 – Subject A) P1, P2, P3 share variables n and m with semaphores S1=1, S2=1. P1 does wait(S1);wait(S2);...signal(S2);signal(S1). Why is this flawed?",
     type: "multiple_choice",
     options: [
       "Variables n and m are not initialized correctly",
@@ -166,7 +166,7 @@ export const levels: Level[] = [
   },
   {
     id: 13,
-    question: "(Test 1 – Sujet A) P1: n=n/3, m=m*2 | P2: m=m+3 | P3: n=n+5. Starting from n=6, m=6, what execution order gives n=7, m=18?",
+    question: "(Test 1 – Subject A) P1: n=n/3, m=m*2 | P2: m=m+3 | P3: n=n+5. Starting from n=6, m=6, what execution order gives n=7, m=18?",
     type: "multiple_choice",
     options: [
       "P1 → P2 → P3",
@@ -179,7 +179,7 @@ export const levels: Level[] = [
   },
   {
     id: 14,
-    question: "(Test 1 – Sujet B) Why are semaphore-based solutions preferred over busy waiting (attente active)?",
+    question: "(Test 1 – Subject B) Why are semaphore-based solutions preferred over busy waiting (attente active)?",
     type: "multiple_choice",
     options: [
       "Semaphores use less memory",
@@ -192,7 +192,7 @@ export const levels: Level[] = [
   },
   {
     id: 15,
-    question: "(Test 1 – Sujet B) To guarantee T1 is never executed at the same time as T2 (Mutual Exclusion), what is the correct setup?",
+    question: "(Test 1 – Subject B) To guarantee T1 is never executed at the same time as T2 (Mutual Exclusion), what is the correct setup?",
     type: "multiple_choice",
     options: [
       "Semaphore S=1; P1: wait(S); T1; signal(S); | P2: wait(S); T2; signal(S);",
@@ -205,7 +205,7 @@ export const levels: Level[] = [
   },
   {
     id: 16,
-    question: "(Test 1 – Sujet B) Use two semaphores to synchronize T1 and T2 such that execution order is strictly T2 T1 T2 T1 T2...",
+    question: "(Test 1 – Subject B) Use two semaphores to synchronize T1 and T2 such that execution order is strictly T2 T1 T2 T1 T2...",
     type: "multiple_choice",
     options: [
       "S1=1, S2=1; P1: wait(S1); T1; signal(S2); | P2: wait(S2); T2; signal(S1);",
@@ -218,7 +218,7 @@ export const levels: Level[] = [
   },
   {
     id: 17,
-    question: "(Test 1 – Sujet B G1) Given semaphores a=1, b=1, c=0 and P1: wait(a);signal(a);wait(b);signal(b);signal(c) / P2: wait(a);wait(b);wait(c);signal(a);wait(b). Do P1 and P2 deadlock?",
+    question: "(Test 1 – Subject B G1) Given semaphores a=1, b=1, c=0 and P1: wait(a);signal(a);wait(b);signal(b);signal(c) / P2: wait(a);wait(b);wait(c);signal(a);wait(b). Do P1 and P2 deadlock?",
     type: "multiple_choice",
     options: [
       "No, they can always complete",
