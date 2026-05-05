@@ -294,7 +294,7 @@ export const levels: Level[] = [
   },
   {
     id: 23,
-    question: "(Test 1 – G5) To compute the sum of array T[10] using two parallel processes (P1 for even indices, P2 for odd), what semaphore protects 'somme'?",
+    question: "(Test 1 – G5) To compute the sum of array T[10] using two parallel processes (P1 for even indices, P2 for odd), what semaphore protects 'sum'?",
     type: "multiple_choice",
     options: [
       "semaphore mutex = 0;",
@@ -303,20 +303,20 @@ export const levels: Level[] = [
       "No semaphore needed — each process uses different indices"
     ],
     correctAnswer: "semaphore mutex = 1;",
-    explanation: "Both P1 and P2 modify the shared variable 'somme'. A mutex (initialized to 1) ensures they don't write to it simultaneously."
+    explanation: "Both P1 and P2 modify the shared variable 'sum'. A mutex (initialized to 1) ensures they don't write to it simultaneously."
   },
   {
     id: 24,
-    question: "(Test 1 – G5) In the parallel array sum, P1 does: wait(mutex); somme=somme+T[i]; signal(mutex); i=i+2. Why is i=i+2 OUTSIDE the critical section?",
+    question: "(Test 1 – G5) In the parallel array sum, P1 does: wait(mutex); sum=sum+T[i]; signal(mutex); i=i+2. Why is i=i+2 OUTSIDE the critical section?",
     type: "multiple_choice",
     options: [
       "Because i is a shared variable that both processes read",
-      "Because i is a local variable — only 'somme' needs protection",
+      "Because i is a local variable — only 'sum' needs protection",
       "Because incrementing i is an atomic operation",
       "It should actually be inside the critical section"
     ],
-    correctAnswer: "Because i is a local variable — only 'somme' needs protection",
-    explanation: "Each process has its own local loop counter (i for P1, j for P2). Only the shared variable 'somme' needs mutual exclusion."
+    correctAnswer: "Because i is a local variable — only 'sum' needs protection",
+    explanation: "Each process has its own local loop counter (i for P1, j for P2). Only the shared variable 'sum' needs mutual exclusion."
   },
   {
     id: 25,
@@ -336,13 +336,13 @@ export const levels: Level[] = [
     question: "(Test 1 – Dec 18) Swimming pool: N baskets, M cabins (M≤N), max N swimmers. A swimmer needs a basket to enter and a cabin to change. Which semaphores are used?",
     type: "multiple_choice",
     options: [
-      "semaphore panier = N; semaphore cabine = M;",
-      "semaphore panier = 1; semaphore cabine = 1;",
-      "semaphore panier = M; semaphore cabine = N;",
-      "semaphore panier = N; semaphore cabine = N;"
+      "semaphore basket = N; semaphore cabin = M;",
+      "semaphore basket = 1; semaphore cabin = 1;",
+      "semaphore basket = M; semaphore cabin = N;",
+      "semaphore basket = N; semaphore cabin = N;"
     ],
-    correctAnswer: "semaphore panier = N; semaphore cabine = M;",
-    explanation: "There are N baskets and M cabins. Each semaphore is initialized to the count of the resource it protects. A swimmer wait(panier) then wait(cabine) to change."
+    correctAnswer: "semaphore basket = N; semaphore cabin = M;",
+    explanation: "There are N baskets and M cabins. Each semaphore is initialized to the count of the resource it protects. A swimmer calls wait(basket) then wait(cabin) to change."
   },
   {
     id: 27,
