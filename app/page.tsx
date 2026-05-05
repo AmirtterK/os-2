@@ -1,65 +1,106 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { BookOpen, Gamepad2, Activity, Lightbulb, Laptop } from "lucide-react";
+import { useState } from "react";
+
+const modules = [
+  {
+    id: "theory",
+    title: "Theory & POSIX",
+    description: "Learn definitions, Mutex, and practical POSIX code.",
+    icon: <BookOpen className="w-10 h-10 text-white" />,
+    href: "/theory",
+    color: "bg-primary",
+    hoverColor: "hover:bg-primary-hover",
+    shadow: "button-3d-primary"
+  },
+  {
+    id: "simulator",
+    title: "Interactive Simulator",
+    description: "Watch processes get blocked and unblocked in real-time.",
+    icon: <Activity className="w-10 h-10 text-white" />,
+    href: "/simulator",
+    color: "bg-secondary",
+    hoverColor: "hover:bg-blue-600",
+    shadow: "button-3d-secondary"
+  },
+  {
+    id: "examples",
+    title: "Famous Examples & Exams",
+    description: "Classic problems + all Test 1 exam exercises with solutions.",
+    icon: <Lightbulb className="w-10 h-10 text-white" />,
+    href: "/examples",
+    color: "bg-orange-500",
+    hoverColor: "hover:bg-orange-600",
+    shadow: "box-shadow-orange"
+  },
+  {
+    id: "game",
+    title: "Practice Quizzes",
+    description: "28 questions covering theory + all exam subjects.",
+    icon: <Gamepad2 className="w-10 h-10 text-white" />,
+    href: "/game",
+    color: "bg-purple-500",
+    hoverColor: "hover:bg-purple-600",
+    shadow: "box-shadow-purple"
+  }
+];
 
 export default function Home() {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex min-h-screen flex-col items-center py-12 px-6 bg-background relative overflow-hidden transition-colors duration-300">
+      
+      {/* Background decorations */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-secondary opacity-10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="z-10 flex flex-col items-center text-center space-y-4 mb-12">
+        <div 
+          className="laptop-logo-wrapper cursor-pointer mb-2 relative"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <div className={`laptop-logo-inner ${isHovered ? 'is-spinning' : ''}`}>
+            <div className="bg-primary/20 p-6 rounded-full backdrop-blur-sm border-2 border-primary/30">
+              <Laptop className="w-16 h-16 text-primary" />
+            </div>
+          </div>
+          {/* Glow ring on hover */}
+          <div className={`absolute inset-0 rounded-full transition-all duration-300 ${isHovered ? 'shadow-[0_0_40px_rgba(88,204,2,0.4)]' : ''}`} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <h1 className="text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
+          OS2 Semaphore <span className="text-primary">Hub</span>
+        </h1>
+        <p className="text-lg text-foreground/70 max-w-xl">
+          Everything you need to master Wait, Signal, Mutex, and classic synchronization problems.
+        </p>
+      </div>
+
+      <div className="z-10 grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+        {modules.map((mod) => (
+          <Link 
+            key={mod.id} 
+            href={mod.href}
+            className={`flex items-start gap-4 p-6 rounded-3xl button-3d transition-all ${mod.color} ${mod.hoverColor} group`}
+            style={{ boxShadow: `0 6px 0 rgba(0,0,0,0.2)` }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            <div className="bg-white/20 p-4 rounded-2xl">
+              {mod.icon}
+            </div>
+            <div className="text-left flex-1">
+              <h2 className="text-2xl font-bold text-white mb-2 group-hover:scale-105 transition-transform origin-left">
+                {mod.title}
+              </h2>
+              <p className="text-white/80 font-medium">
+                {mod.description}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </main>
   );
 }

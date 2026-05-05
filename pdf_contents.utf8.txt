@@ -1,0 +1,694 @@
+
+
+--- Content of SE/Cours/Cours3.pdf ---
+1 
+ 
+Les Sémaphores 
+ 
+Introduction 
+Les solutions au problème de l’exclusion mutuelle p résentées jusqu’à présent dans ce cours 
+sont difficiles à réaliser et à comprendre puisque on ne peut pas trancher si une variable est 
+utilisée pour assurer l’exclusion mutuelle ou pour faire autre chose.  
+De plus ces solutions sont basées sur le principe d ’attente active : un processus qui ne peut 
+pas progresser dans son protocole d’entrée, occupe inutilement le processeur. Un 
+processeur peut être utilisé d’une façon plus produ ctive s’il n’attend pas activement qu’une 
+condition change d’état dans un processus. 
+ 
+Définition des sémaphores 
+ 
+Le principe fondamental des sémaphores est basé sur  le faite que deux ou plusieurs peuvent 
+coopérer en utilisant des signaux  simples. On peut considérer un sémaphore comme éta nt 
+une variable qui contiens une valeur entière et sur  laquelle trois (3) opérations sont 
+définies :  
+• Un sémaphore doit être initialisé à une valeur entière non négative 
+• Pour recevoir un signal via un  sémaphore  S, un processus exécute la fonction 
+primitive wait(S) . Cette fonction décrémente la valeur du sémaphore ; si la valeur 
+devient négative, alors le processus qui a exécuté wait  doit être bloqué.  
+• Pour transmettre un signal via un sémaphore S, un processus exécute la fonction 
+primitive signal(S).  Cette fonction incrémente la valeur du sémaphore ; si la valeur 
+(après incrémentation) n’est pas positive, alors un  processus bloqué par wait  et 
+débloqué.   
+Remarque : 
+La désignation des opérations peuvent changer d’un système à un autre : 
+• P (Proberen : tester) ou Down  pour l’opération wait  
+• V (Verhogen : incrémenter) ou Up  pour l’opération signal  
+ 
+Déclaration des sémaphores 
+ 
+Le type sémaphore est défini comme suit : 
+ 
+struct   semaphore{ 
+             int  count ; 
+             QueueType queue ; 
+        } 
+ 
+ 
+ 
+2 
+ 
+Les opérations sur une variable de type sémaphore : 
+ 
+void   wait( semaphore s){  
+           s.count -- ; 
+           if ( s.count<0 ) { 
+Placer ce processus dans s.queue; 
+Bloquer ce processus ; 
+} 
+ 
+         } 
+ 
+ 
+void   signal( semaphore s){  
+           s.count++ ; 
+           if ( s.count<= 0 ) { 
+Retirer un processus p de s.queue; 
+Placer le processus p dans la liste des processus « prêts » ; 
+} 
+ 
+         } 
+ 
+Propriétés des sémaphores : 
+• Les opérations wait et signal sont atomiques (une o pération wait ou signal est 
+exécutée sans possibilité d’interruption) 
+• Les opérations wait et signal sont en Exclusion Mut uelle, elles ne sont jamais 
+exécutées en même temps; de même que deux opération s wait ou deux opérations 
+signal sur le même variable sémaphore. 
+• Quand s.count ≥ 0, le nombre de processus qui peuve nt exécuter wait(s) sans être 
+bloqué est s.count 
+• Quand s.count < 0, le nombre de processus en attent e dans la file s.queue est 
+|s.count| 
+• La déclaration d’une variable de type sémaphore doi t toujours inclure une 
+initialisation de cette variable à une valeur entière non négative. 
+• Un sémaphore d’exclusion mutuelle (mutex) est initialisé à 1 
+• Un sémaphore dont la définition inclut l’application d’une politique FIFO au niveau de 
+la gestion de s.queue est appelé un sémaphore fort . 
+• Un sémaphore dont la définition ne précise pas la p olitique de gestion de s.queue est 
+appelé un sémaphore faible 
+• Sauf exception, nous supposons que les sémaphores q ue nous utilisons sont des 
+sémphores forts. 
+ 
+3 
+ 
+Utilisation de sémaphore pour la réalisation d’exclusion mutuelle 
+ 
+Soient N processus en exclusion mutuelle sur un obj et commun. On utilise un sémaphore 
+mutex  initialisé à 1. 
+ 
+ semaphore  mutex = 1 ; 
+ 
+void  Pi ( ){ 
+  while (1){ 
+………. 
+wait(mutex) ; 
+SC 
+signal(mutex) ; 
+………. 
+              } 
+} 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+4 
+ 
+Problème du Producteur Consommateur 
+Énoncé du problème 
+ 
+Un processus producteur place (dépose) des éléments  dans un tampon (buffer) pour qu’un 
+processus consommateur puisse les retirer et les traiter.  
+Ce schéma constitue une communication entre 2 proce ssus, le producteur étant l’émetteur 
+du message et le consommateur, le destinataire du message.  
+ 
+Les producteurs et les consommateurs doivent se coo rdonner afin de respecter les 
+contraintes suivantes : 
+• Les éléments contenus dans le tampon ne sont consommés qu’une seule fois ; 
+• Les éléments du tampon sont consommés selon leur ordre de production ; 
+• Si le tampon est plein, un producteur doit attendre  la libération d’un élément du 
+tampon. 
+• Si le tampon est vide, un consommateur doit attendre le dépôt d’un nouvel élément. 
+• Empêcher le chevauchement des opérations sur le tampon. 
+ 
+Problème de Producteur-Consommateur avec un tampon infini 
+ 
+De manière abstraite, on peut définir les codes des deux processus comme suit : 
+ 
+Producteur : 
+     while(true){ 
+          /* produire l’élément v */ 
+          B[in] = v ; 
+          in++ ; 
+} 
+Consommateur : 
+     while(true){ 
+         while(in ≤ out); 
+           w = B[out]; 
+           out++; 
+            /* consommer l’élément w */ 
+}
+ 
+ 
+ 
+Première solution 
+int  n ; /*nombre des éléments dans le tampon */ 
+semaphore mutex = 1 ;  /* EM sur l’accès au tampon et à la variable n */ 
+semaphore delay = 0 ;  /*force le consommateur à attendre quand le tampon est vide */ 
+ 
+void  Producteur () { 
+   while(1) { 
+       produire () ; 
+       wait (mutex) ; 
+       deposer () ; 
+       n++ ; 
+       if(n == 1) signal(delay) ; 
+       signal(mutex); 
+                     } 
+    } 
+void  Consommateur () { 
+    wait(delay) ; 
+    while(1){ 
+         wait (mutex) ; 
+         retirer (); 
+         n-- ;    
+         signal(mutex); 
+         consommer (); 
+         if(n == 0) wait (delay) ; 
+                    } 
+} 
+int main () { 
+ 
+n = 0; 
+ 
+parbegin(producteur(),…, 
+producteur(),consommateur()); 
+ 
+ 
+return 0; 
+} 
+ 
+ 
+ 
+5 
+ 
+Le scenario suivant montre que la solution est inco rrecte, car le nombre d’éléments dans un 
+tampon ou un tableau ne doit jamais avoir une valeur négative.  
+ 
+Producteur Consommateur mutex N delay 
+  1 0 0 
+wait (mutex)   0 0 0 
+n++  0 1 0 
+if(n == 1) signal(delay)   0 1 1 
+signal(mutex)  1 1 1 
+ wait(delay) 1 1 0 
+ wait (mutex)  0 1 0 
+ n-- 0 0 0 
+ signal(mutex) 1 0 0 
+wait (mutex)   0 0 0 
+n++  0 1 0 
+if(n == 1) signal(delay)   0 1 1 
+signal(mutex)  1 1 1 
+ if(n == 0) wait (delay)  1 1 1 
+ wait (mutex)  0 1 1 
+ n-- 0 0 1 
+ signal(mutex) 1 0 1 
+ if(n == 0) wait (delay)  1 0 0 
+ wait (mutex)  0 0 0 
+ n-- 0 -1 0 
+ signal(mutex)    
+ 
+Deuxième solution 
+int  n ; /*nombre des éléments dans le tampon */ 
+semaphore mutex = 1 ;  /* EM sur l’accès au tampon et à la variable n */ 
+semaphore delay = 0 ;  /*force le consommateur à attendre quand le tampon est vide */ 
+ 
+void  Producteur () { 
+   while(1) { 
+       produire () ; 
+       wait (mutex) ; 
+       deposer () ; 
+       n++ ; 
+       if(n == 1) signal(delay) ; 
+       signal(mutex); 
+                     } 
+    } 
+void  Consommateur () { 
+  int m ; /* variable locale*/ 
+    wait(delay) ; 
+    while(1){ 
+         wait (mutex) ; 
+         retirer (); 
+         n-- ;   
+         m = n;  
+         signal(mutex); 
+         consommer (); 
+         if( m == 0) wait (delay) ;
+ 
+                    } 
+} 
+int main () { 
+ 
+n = 0; 
+ 
+parbegin(producteur(),…, 
+producteur(),consommateur()); 
+ 
+ 
+return 0; 
+} 
+ 
+ 
+ 
+ 
+6 
+ 
+ 
+Producteur Consommateur Mutex n m Delay 
+  1 0 0 0 
+wait (mutex)   0 0 0 0 
+n++  0 1 0 0 
+if(n == 1) signal(delay)   0 1 0 1 
+signal(mutex)  1 1 0 1 
+ wait(delay) 1 1 0 0 
+ wait (mutex)  0 1 0 0 
+ n-- 0 0 0 0 
+ m=n 0 0 0 0 
+ signal(mutex) 1 0 0 0 
+wait (mutex)   0 0 0 0 
+n++  0 1 0 0 
+if(n == 1) signal(delay)   0 1 0 1 
+signal(mutex)  1 1 0 1 
+ if(m == 0) wait (delay)  1 1 0 0 
+ wait (mutex)  0 1 0 0 
+ n-- 0 0 0 0 
+ m=n 0 0 0 0 
+ signal(mutex) 1 0 0 0 
+ if(m == 0) wait (delay)  1 0 0 -1 
+ 
+Dans cette solution le problème est réglé par l’ajo ut d’une variable locale ( m) au 
+consommateur, cette variable à éviter le teste et la modification de la variable n par les deux 
+processus producteur et consommateur. 
+Dans ce scénario, le consommateur est bloqué tant que le tampon est vide.  
+ 
+Troisième solution  
+Une autre solution plus simple peut être obtenue on utilisant les sémaphores généraux. 
+ 
+semaphore n=0, mutex=1 ; 
+ 
+void  Producteur () { 
+   while(1) { 
+       produire () ; 
+       wait (mutex) ; 
+       deposer () ; 
+       signal(mutex); 
+       signal(n); 
+                     } 
+    } 
+void  Consommateur () { 
+    while(1){ 
+         wait (n) ; 
+         wait (mutex) ; 
+         retirer (); 
+         signal (mutex); 
+         consommer () ; 
+                     } 
+} 
+int main () { 
+ 
+parbegin(producteur(),…, 
+producteur(),consommateur()); 
+ 
+ 
+return 0; 
+} 
+ 
+ 
+ 
+Exercice  : vérifier la validité de cette solution en déroul ant le scenario des deux solutions 
+précédentes. 
+ 
+7 
+ 
+ 
+Problème de Producteur-Consommateur avec un tampon fini (limité) 
+Le tampon peut contenir un nombre maximum d’élément s et ces éléments sont organisés 
+en liste circulaire et les valeurs des indices doiv ent être exprimées par le modulo de la taille 
+du tampon. Un élément du tampon, dont le contenu a été consommé, peut à nouveau 
+servir.  
+De manière abstraite, on peut définir les codes des deux processus comme suit : 
+ 
+Producteur : 
+     while(true){ 
+     /* produire l’élément v */         
+          while(count == n) ; 
+          B[in] = v ; 
+          in = (in+1) % n ; 
+          count ++; 
+} 
+Consommateur : 
+     while(true){ 
+         while(count == 0); 
+          w = B[out]; 
+          out = (out+1) % n ; 
+          count --; 
+     /* consommer l’élément w */ 
+}
+ 
+ 
+Solution pour un tampon de taille limité  
+const int  size = 100 ; /*taille du tampon */ 
+semaphore mutex = 1 ;  /* EM sur l’accès au tampon */ 
+semaphore n = 0 ;  /*pas de retrait d’un tampon vide */ 
+semaphore e = size ;  /*pas de dépôt dans un tampon plein */ 
+ 
+void  Producteur () { 
+   while(1) { 
+       produire () ; 
+       wait (e) ; 
+       wait (mutex) ; 
+       deposer () ; 
+       signal (mutex); 
+       signal (n); 
+                     } 
+    } 
+void  Consommateur () { 
+    while(1) { 
+         wait (n) ; 
+         wait (mutex) ; 
+         retirer (); 
+         signal (mutex); 
+         signal (e); 
+         consommer () ; 
+                     } 
+} 
+int main () { 
+ 
+parbegin(producteur(),…, 
+producteur(),consommateur()); 
+ 
+ 
+return 0; 
+} 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+8 
+ 
+Problème de Lecteurs-Rédacteurs 
+ 
+Les situations de type lecteurs-rédacteurs correspo ndent à l’accès concurrent à une 
+ressource qui est accédée en lecture par certains p rocessus, et en écriture par d’autres. Un 
+exemple typique est l’accès à un fichier, qui peut être ouvert simultanément en lecture par 
+plusieurs processus, mais en écriture par un et un seul. 
+ 
+Énoncé du problème 
+ 
+Un ensemble de processus (lecteurs et rédacteurs) se partagent des données. Les lecteurs ne 
+font que lire les données, tandis que les rédacteurs peuvent également les modifier (écrire).  
+Les opérations de lecture peuvent être concurrentes.  Plusieurs processus peuvent accéder à 
+un même fichier en lecture sans risque de trouver le fichier dans un état incohérent. 
+Les écritures sont, par contre, critiques. Si deux processus modifient un fichier 
+simultanément, les données de ce fichier risquent d ’être corrompues. Et de même, si un 
+processus modifie un fichier alors qu’un autre l’ac cède en lecture, ce dernier peut se 
+retrouver avec des données incohérentes.  
+Alors, les accès en écriture doivent être effectués  en exclusion mutuelle : une écriture ne 
+peut être réalisée si une autre écriture est en cou rs, une lecture ne peut être faite tant 
+qu’une écriture est en cours, et une écriture ne pe ut débuter que si aucune lecture n’est en 
+cours. 
+Pour résumer, à un moment donné on ne doit avoir que l’une des deux situations suivantes : 
+• Un seul rédacteur est en train de modifier le fichier 
+• Un ou plusieurs lecteurs sont en train de lire le contenu du fichier 
+ 
+Le problème des lecteurs-rédacteurs est plus généra l qu’un simple problème d’exclusion 
+mutuelle, de par ces contraintes. La solution à ce problème n’est pas unique. Plusieurs 
+solutions peuvent en effet être proposées, en fonction des priorités choisies : 
+1.  Priorité aux lecteurs (famine possible des rédacteurs) 
+2.  Priorité aux lecteurs si un lecteur a déjà accès à la ressource (famine possible des 
+lecteurs) 
+3.  Priorité aux rédacteurs (famine possible des lecteurs) 
+4.  Accès aux données selon les ordres des arrivées. To utes les demandes des lecteurs 
+qui se suivent sont satisfaites en même temps. 
+ 
+Nous nous intéresserons dans ce cours au cas où on donne une certaine priorité aux 
+Lecteurs. Autrement dit, aucun Lecteur n’attend, à moins qu’un rédacteur n’ait déjà obtenu 
+l’autorisation pour utiliser le fichier. Les autres cas seront traités au TD. 
+ 
+ 
+ 
+ 
+ 
+9 
+ 
+semaphore mutex = 1 ;  /* EM sur l’accès à la variable ReadCount*/ 
+semaphore wrt = 1 ;       /* EM sur l’accès en écriture de fichier */ 
+int ReadCount = 0 ;          /* le nombre de Lecteurs actuellement dans le fichier */ 
+ 
+void Lecteur ( ){ 
+  wait(mutex) ; 
+  ReadCount ++; 
+  if (ReadCount ==1) wait(wrt) 
+  signal(mutex) ; 
+      /* Lire le fichier */ 
+   wait(mutex) ; 
+  ReadCount  - -;  
+  if (ReadCount ==0) signal(wrt) 
+  signal(mutex); 
+} 
+void Redacteur ( ){ 
+   
+   wait(wrt) 
+   
+    /* Écrire dans le fichier */ 
+ 
+ 
+    signal (wrt) 
+   
+} 
+int main () { 
+ 
+parbegin(Lecteur(), 
+Redacteur() ); 
+ 
+return 0; 
+} 
+ 
+ 
+ 
+Les sémaphores Binaires 
+ 
+• Les sémaphores binaires sont des sémaphores qui ne peuvent prendre que les 
+valeurs 0 et 1.  
+• Ils sont utilisés pour mettre en œuvre les verrous en utilisant un mécanisme de 
+signalisation pour obtenir une exclusion mutuelle. 
+• Si la valeur du sémaphore est 0, cela signifie qu’il est verrouillé, donc le verrou  n’est 
+pas disponible. 
+• Si la valeur du sémaphore est 1, cela signifie qu’il est déverrouillé, donc le verrou  est 
+disponible. 
+ 
+Structure de semaphore binaire 
+   
+ struct  binary_semaphore{ 
+          enum {zero, one}  value ; 
+          queueType  queue; 
+                                               }; 
+Un semaphore binaire peut être initialisé à 0 ou 1. 
+ 
+Les opérations primitives 
+ 
+L’opération waitB  contrôle la valeur du semaphore.  
+• Si la valeur est nulle, alors le processus qui exécute waitB est bloqué.  
+• Si la valeur est 1, alors la valeur est changée est  mise à zéro et le processus continue 
+l’exécution. 
+   
+ 
+10 
+ 
+   
+    void   waitB(binary_semaphore s){ 
+         if   (s.value == one)  
+              s.value = zero; 
+         else { 
+             /* Placer ce processus dans s.queue */ 
+            /* Bloquer ce processus */ 
+                 } 
+         } 
+ 
+L’opération signalB  verifié si des processus sont bloqués sur ce semap hore (la valeur du 
+semaphore est égale à zero).  
+• Si ainsi, alors un processus bloqué sur l’opération du waitB est débloqué.  
+• Si aucun processus n’est bloqué, alors la valeur du  semaphore est changée est mise à 
+un (1).  
+ 
+       void  signalB(binary_semaphore s){ 
+             if   (s.queue is empty())  
+                  s.value = one; 
+            else { 
+                 /* Retirer un processus P de s.queue */ 
+                /* Placer le processus P dans la liste des processus prêt */ 
+                    } 
+          } 
+ 
+L’exclusion mutuelle pour l’utilisation d’une ressource critique peut s’exprimer comme suit :  
+                       semaphore mutex = 1 
+                        void Pi ( ) {     /* i=1,n */  
+                               waitB(mutex)  
+                               /* section critique */  
+                               signalB(mutex)  
+                                         } 
+Remarque :  
+- Les primitives waitB  et signalB  sont aussi dénommées Lock  et Unlock  respectivement. 
+- L’utilisation de waitB  et signalB  à la place de wait  et signal  ne donne pas toujours le même 
+résultat  
+ 
+
+
+--- Content of SE/Cours/Cours4.pdf ---
+1 
+ 
+Les Moniteurs 
+ 
+1.  Définition 
+ 
+Un moniteur est un type de donnée abstrait qui possède des mécanismes de synchronisation 
+et dont l’accès se réalise en exclusion mutuelle. I l comprend un ensemble de variables et un 
+ensemble de procédures qui manipulent ces variables. Certaines procédures sont accessibles 
+depuis l’extérieur et sont les points d’entrée du moniteur.  
+Les processus qui font appel à un moniteur pour se synchroniser n’ont pas un accès direct 
+aux variables contenues dans le moniteur. Ils ne pe uvent les atteindre que par les points 
+processus est actif dans le moniteur, en train d’exécuter une de ses procédures.  
+Un moniteur contient aussi une partie d’initialisation qui n’est exécutée qu’une fois lors de la 
+création du moniteur.  
+ 
+Pour résumé, les caractéristiques principales du moniteur sont : 
+• Les variables locales sont accessibles uniquement par les procédures du moniteur. 
+• Un processus entre dans le moniteur en appelant une des procédures du moniteur 
+• Un seul processus peut exécuter le moniteur (être actif dans le moniteur) à un instant 
+donné ; tout autre processus qui appel le moniteur est suspendu jusqu'à ce que le 
+moniteur devient libre. 
+ 
+2.  Structure de Moniteur 
+ 
+Monitor Nom moniteur {    // début de moniteur 
+     variables locales    
+     variable de condition  
+  
+     void  procedure 1( ) {  } 
+     void procedure N( ){   }  
+      {      
+         // code initialisation 
+      } 
+   }         // fin de moniteur 
+ 
+3.  Les variables de condition 
+ 
+Un moniteur permet de faire la synchronisation en u tilisant des variables spéciales appelées 
+les variables de condition qui sont déclarées dans le moniteur et accessible uniquement à 
+l’intérieur du moniteur.  
+ 
+ 
+2 
+ 
+La déclaration d’une variable de condition peut se faire comme suit : 
+ 
+condition  c ; 
+ 
+Deux fonctions primitives opèrent sur les variables de condition : 
+• cwait(c)  : suspend l’exécution d’un processus appelant sur la condition c. le moniteur 
+devient disponible pour un autre processus. 
+• csignal(c)  : réveille un processus suspendu après un cwait su r la même condition. Si 
+plusieurs processus sont suspendus sur la condition  c, alors choisir l’un entre eux, si 
+aucun processus n’est suspendu sur c, alors ne rien faire.   
+ 
+Remarque : 
+Les opérations cwait et csignal sont différents de leurs équivalentes dans les sémaphores : 
+• Si un processus exécute un csignal sur une conditio n c et qu’aucun processus n’est 
+suspendu sur la condition c alors ce signal est perdu . 
+• Un processus qui exécute un cwait sur une condition  c est systématiquement 
+suspendu. 
+ 
+Exemple : la synchronisation de problème de producteur/consommateur par le moniteur  
+ 
+#define  N 100 // taille de tampon 
+ 
+Monitor  Prod_Cons {    // début de moniteur 
+char  buffer[N] ; 
+int  in, out ;    // indices d’entrée et de sortie du buffer 
+int  count;      // nombre d’objets dans le buffer 
+condition  vide, plein; 
+ 
+void   deposer (char  x) {   //déposer un objet x dans le buffer 
+  if  (count == N)   cwait(vide) ; 
+   buffer[in] = x; 
+   in = (in + 1) % N; 
+   count ++; 
+   csignal(plein); 
+   } 
+ 
+void  retirer (cha r *x) {     //retirer un objet de buffer 
+  if  (count == 0)   cwait(plein) ; 
+  *x = buffer[out]; 
+    out = (out +1) % N; 
+    count --; 
+    csignal(vide); 
+} 
+ 
+ 
+3 
+ 
+ {     // code initialisation 
+           in = 0; 
+         out = 0;  
+     count = 0; 
+ } 
+ 
+}  // fin de moniteur 
+ 
+void   producteur ( ) {  //processus producteur 
+  char x ; 
+   while (1){ 
+         produire(&x) ; 
+         Prod_Cons.deposer(x) ; 
+                 } 
+ } 
+ 
+void  consommateur ( ) {  // processus consommateur 
+   char x ; 
+     while (1){ 
+         Prod_Cons.retier(&x) ; 
+         consommer (x) ; 
+            } 
+ 
+int  main ( ) { 
+    parbegin (producteur(), consommateur() ) ; 
+    return  0 ; 
+} 
