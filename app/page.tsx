@@ -101,6 +101,10 @@ export default function Home() {
           </Link>
         ))}
       </div>
+
+      <div className="z-10 mt-16 text-foreground/30 font-medium text-sm tracking-widest italic">
+        #33
+      </div>
     </main>
   );
 }
